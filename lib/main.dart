@@ -89,7 +89,7 @@ class _HomeState extends State<Home> {
   _onKeyTapped(String val) {
     dev.log("Pressed key $val");
     setState(() {
-      board[_i][_j] = int.parse(val);
+      _board[_i][_j] = int.parse(val);
       dev.log("Updated board with $val at $_i :: $_j");
     });
   }
@@ -103,8 +103,8 @@ class _HomeState extends State<Home> {
       9, (index) => List.generate(9, (_) => GlobalKey<FlipCardState>()));
   final List<List<int>> _board =
       List.generate(9, (index) => List.generate(9, (index) => 0));
-  List<List<int>> board =
-      List.generate(9, (index) => List.generate(9, (index) => 0));
+  // List<List<int>> board =
+  //     List.generate(9, (index) => List.generate(9, (index) => 0));
   List<List<GlobalKey<BoardTileState>>> frontTileKeys = List.generate(
       9, (index) => List.generate(9, (_) => GlobalKey<BoardTileState>()));
   List<List<GlobalKey<BoardTileState>>> backTileKeys = List.generate(
@@ -121,20 +121,34 @@ class _HomeState extends State<Home> {
     try {
       value = await platform.invokeMethod<List<int>>("generate_grid");
       int j = 0;
+      // 40% - easy, 60% - medium, 80% - hard
+      int show = (81 * 0.80).round();
+      var indx = [];
+      var indL = List.generate(81, (index) => index);
+      for (int i = 0; i < show; i++) {
+        var ind = indL[Random().nextInt(indL.length)];
+        indx.add(ind);
+        indL.remove(ind);
+      }
+      dev.log("Random Indices :: $show :: $indx");
       for (int i = 0; i < 81; i++) {
         if (i != 0 && i % 9 == 0) {
           j++;
         }
-        _board[j][i % 9] = value!.elementAt(i) ?? 0;
-        if (Random().nextBool()) {
-          board[j][i % 9] = _board[i % 9][j];
+        if (!indx.contains(i)) {
+          _board[j][i % 9] = value!.elementAt(i) ?? 0;
         }
+
+        // if (Random().nextBool()) {
+        //   board[j][i % 9] = _board[i % 9][j];
+        // }
       }
     } catch (e) {
       dev.log("$e");
     }
     dev.log("Value :: $value");
     dev.log("\nBoard :: $_board");
+    // dev.log("\nDisplayed Board :: $board");
     setState(() {});
   }
 
@@ -165,7 +179,7 @@ class _HomeState extends State<Home> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Board(
-              board: board,
+              board: _board,
               flipCardKeys: _flipCardKeys,
               onTap: _tileTapped,
               frontTileKeys: frontTileKeys,
