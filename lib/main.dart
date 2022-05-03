@@ -119,7 +119,9 @@ class _HomeState extends State<Home> {
   _generate_board() async {
     List<int?>? value;
     try {
-      value = await platform.invokeMethod<List<int>>("generate_grid");
+      Map<String, dynamic> args = <String, dynamic>{};
+      args.putIfAbsent('N', () => 9);
+      value = await platform.invokeMethod<List<int>>("generate_grid", args);
       int j = 0;
       // 40% - easy, 60% - medium, 80% - hard
       int show = (81 * 0.80).round();
@@ -143,6 +145,15 @@ class _HomeState extends State<Home> {
         //   board[j][i % 9] = _board[i % 9][j];
         // }
       }
+      args.putIfAbsent('grid', () => _board);
+      bool isValid =
+          await platform.invokeMethod<bool>("validate_grid", args) ?? false;
+      dev.log("Is Valid Grid :: $isValid");
+
+      Map<dynamic, dynamic> hint = await platform
+              .invokeMethod<Map<dynamic, dynamic>>("get_hint", args) ??
+          {};
+      dev.log("Hint :: $hint");
     } catch (e) {
       dev.log("$e");
     }

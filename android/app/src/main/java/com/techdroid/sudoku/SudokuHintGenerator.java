@@ -12,7 +12,7 @@ public class SudokuHintGenerator {
 	int sqrt = 3;
 
 	public SudokuHintGenerator(int N){
-		this.N = n;
+		this.N = N;
 		this.sqrt = (int) Math.sqrt(this.N);
 	}
 

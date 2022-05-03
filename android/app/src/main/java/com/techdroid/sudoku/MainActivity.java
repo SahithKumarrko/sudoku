@@ -12,7 +12,6 @@ import androidx.annotation.NonNull;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
-
 public class MainActivity extends FlutterActivity {
     private static final String CHANNEL = "com.techdroid.sudoku/generate";
     private MethodChannel channel;
@@ -22,8 +21,9 @@ public class MainActivity extends FlutterActivity {
          BinaryMessenger messenger = flutterEngine.getDartExecutor().getBinaryMessenger();
          channel = new MethodChannel(messenger,CHANNEL);
          channel.setMethodCallHandler((methodCall,result) -> {
+            int N = (int) methodCall.argument("N");
                  if(methodCall.method.equals("generate_grid")){
-                    int N = (int) call.argument("N");
+                    
                     int[] res = new int[N];
                     int trials = 0;
                     
@@ -44,22 +44,35 @@ public class MainActivity extends FlutterActivity {
                     System.out.println("Returning");
                     result.success(res);
                  }else if(methodCall.method.equals("validate_grid")){
-                    int[][] grid = (int[]) call.argument("grid");
-                    int N = (int) call.argument("N");
+                    ArrayList<ArrayList<Integer>> arr_grid = methodCall.argument("grid");
+                    int[][] grid = new int[N][N];
+                    for(int i=0;i<arr_grid.size();i++){
+                        grid[i] = arr_grid.get(i).stream().mapToInt(v->v).toArray();
+                    }
+                    System.out.println("Received grid");
+
                     SudokuValidator sv = new SudokuValidator(N);
-                    result.success(sv.isValidConfig(board));
+                    boolean valid = sv.isValidConfig(grid);
+                    System.out.println("Valid :: "+valid);
+                    
+                    result.success(valid);
                 }
                 else if(methodCall.method.equals("get_hint")){
-                    int[][] grid = (int[]) call.argument("grid");
-                    int N = (int) call.argument("N");
+                    ArrayList<ArrayList<Integer>> arr_grid = methodCall.argument("grid");
+                    int[][] grid = new int[N][N];
+                    for(int i=0;i<arr_grid.size();i++){
+                        grid[i] = arr_grid.get(i).stream().mapToInt(v->v).toArray();
+                    }
                     SudokuHintGenerator sv = new SudokuHintGenerator(N);
                     List<Integer> points = sv.getRandomPoint(grid);
                     	if (sv.solveSudoku(grid, 0, 0)){
                             Map<String,Object> res = sv.getNextValue(grid,points);
                             System.out.println(res);
                             result.success(res);
+                        }else{
+                            result.success(null);
                         }
-                    result.success(null);
+                    
                 }
              }
          );

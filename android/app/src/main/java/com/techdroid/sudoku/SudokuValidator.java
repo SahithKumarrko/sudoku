@@ -6,7 +6,7 @@ import java.io.*;
 import java.util.*;
 import java.lang.Math;
  
-class SudokuValidator{
+public class SudokuValidator{
  int N = 9;
  int sqrt_n = 3;
 
@@ -98,11 +98,11 @@ private boolean isValid(int arr[][], int row,
            notInBox(arr, row - row % this.sqrt_n, col - col % this.sqrt_n);
 }
  
-public boolean isValidConfig(int arr[][], int n)
+public boolean isValidConfig(int arr[][])
 {
-    for(int i = 0; i < n; i++)
+    for(int i = 0; i < this.N; i++)
     {
-        for(int j = 0; j < n; j++)
+        for(int j = 0; j < this.N; j++)
         {
              
             // If current row or current column or
