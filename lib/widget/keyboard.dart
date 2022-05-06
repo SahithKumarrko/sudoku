@@ -4,7 +4,8 @@ const _keys = [
   ['1', '2', '3'],
   ['4', '5', '6'],
   ['7', '8', '9'],
-  ['U', 'D', 'L', 'R']
+  ['U', 'D', 'L', 'R'],
+  ['Restart']
 ];
 
 class Keyboard extends StatelessWidget {
@@ -37,13 +38,32 @@ class Keyboard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: keyRow.map((letter) {
                 if (letter == 'U') {
-                  return _KeyboardButton.up(onTap: onUpArrowTapped);
-                } else if (letter == 'U') {
-                  return _KeyboardButton.up(onTap: onUpArrowTapped);
-                } else if (letter == 'U') {
-                  return _KeyboardButton.up(onTap: onUpArrowTapped);
-                } else if (letter == 'U') {
-                  return _KeyboardButton.up(onTap: onUpArrowTapped);
+                  return _KeyboardButton.click(
+                    onTap: onUpArrowTapped,
+                    button: 'U',
+                  );
+                } else if (letter == 'D') {
+                  return _KeyboardButton.click(
+                    onTap: onDownArrowTapped,
+                    button: 'D',
+                  );
+                } else if (letter == 'R') {
+                  return _KeyboardButton.click(
+                    onTap: onRightArrowTapped,
+                    button: 'R',
+                  );
+                } else if (letter == 'L') {
+                  return _KeyboardButton.click(
+                    onTap: onLeftArrowTapped,
+                    button: 'L',
+                  );
+                } else if (letter == "Restart") {
+                  return _KeyboardButton(
+                    onTap: () => onKeyTapped(letter),
+                    letter: letter,
+                    width: 60,
+                    backgroundColor: Colors.grey,
+                  );
                 }
                 return _KeyboardButton(
                   onTap: () => onKeyTapped(letter),
@@ -68,9 +88,10 @@ class _KeyboardButton extends StatelessWidget {
     required this.letter,
   }) : super(key: key);
 
-  factory _KeyboardButton.up({required VoidCallback onTap}) {
+  factory _KeyboardButton.click(
+      {required VoidCallback onTap, required String button}) {
     return _KeyboardButton(
-        onTap: onTap, backgroundColor: Colors.grey, letter: 'U');
+        onTap: onTap, backgroundColor: Colors.grey, letter: button);
   }
 
   final double height;

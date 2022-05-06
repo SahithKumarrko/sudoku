@@ -14,6 +14,16 @@ public class SudokuValidator{
      this.N = N;
      this.sqrt_n = (int) Math.sqrt(this.N);
  }
+
+ /* A utility function to print grid */
+ void print(int[][] grid)
+ {
+     for (int i = 0; i < this.N; i++) {
+         for (int j = 0; j < this.N; j++)
+             System.out.print(grid[i][j] + " ");
+         System.out.println();
+     }
+ }
 // Checks whether there is any duplicate
 // in current row or not
 private boolean notInRow(int arr[][], int row)
@@ -91,7 +101,7 @@ private boolean notInBox(int arr[][],
  
 // Checks whether current row and current column and
 // current this.sqrt_nxthis.sqrt_n box is valid or not
-private boolean isValid(int arr[][], int row,
+public boolean isValid(int arr[][], int row,
                               int col)
 {
     return notInRow(arr, row) && notInCol(arr, col) &&

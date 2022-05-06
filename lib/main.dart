@@ -1,10 +1,10 @@
 import 'dart:developer' as dev;
-import 'dart:math';
 
 import 'package:flip_card/flip_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:sudoku/native/sudoku.dart';
 import 'package:sudoku/provider/app_state.dart';
 import 'package:sudoku/provider/app_theme_provider.dart';
 import 'package:sudoku/widget/board.dart';
@@ -84,91 +84,171 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  List<List<int>> indices = [];
   int _i = 0;
+  int zeros = 0;
   int _j = 0;
-  _onKeyTapped(String val) {
-    dev.log("Pressed key $val");
+  _onKeyTapped(String val) async {
+    dev.log("Pressed key $val :: $_i | $_j");
+    var appProvider = Provider.of<AppState>(context, listen: false);
+    if (val == "Restart") {
+      _restart();
+      return;
+    }
+    if (appProvider.actualBoard[_i][_j] != 0) {
+      dev.log("Contains ${appProvider.actualBoard[_i][_j]}");
+      return;
+    }
+    if (board[_i][_j] == 0) {
+      zeros -= 1;
+    }
     setState(() {
-      _board[_i][_j] = int.parse(val);
+      board[_i][_j] = int.parse(val);
       dev.log("Updated board with $val at $_i :: $_j");
     });
+    bool? valid = await sudoku?.isValidPosition(board, _i, _j);
+
+    dev.log("Valid :: $valid");
+    if (valid == null) {
+      dev.log("Error while validating");
+    } else {
+      if (!valid) {
+        bool p = false;
+        for (List<int> i in indices) {
+          if (i[0] == _i && i[1] == _j) {
+            p = true;
+            break;
+          }
+        }
+        if (!p) {
+          indices.add([_i, _j]);
+          flipCardKeys[_i][_j].currentState?.toggleCard();
+          dev.log("Toggled wrong :: $_i :: $_j");
+        }
+      } else {
+        var rl = [];
+        for (List<int> ind in indices) {
+          bool? validi =
+              await sudoku?.isValidPosition(board, ind[0], ind[1]) ?? false;
+          if (validi) {
+            rl.add(ind);
+            flipCardKeys[ind[0]][ind[1]].currentState?.toggleCard();
+          }
+        }
+        indices.removeWhere((element) => rl.contains(element));
+      }
+      if (valid && zeros == 0) {
+        dev.log("Won");
+      }
+      dev.log("Indoces :: $indices");
+    }
   }
 
-  _onUpArrowTapped() {}
-  _onDownArrowTapped() {}
-  _onLeftArrowTapped() {}
-  _onRightArrowTapped() {}
+  _onUpArrowTapped() {
+    var appProvider = Provider.of<AppState>(context, listen: false);
+    _i = _i - (_i == 0 ? 0 : 1);
+    appProvider.setPosition(row: _i, col: _j);
+    dev.log("Pressed up");
+  }
 
-  final List<List<GlobalKey<FlipCardState>>> _flipCardKeys = List.generate(
-      9, (index) => List.generate(9, (_) => GlobalKey<FlipCardState>()));
-  final List<List<int>> _board =
-      List.generate(9, (index) => List.generate(9, (index) => 0));
+  _onDownArrowTapped() {
+    var appProvider = Provider.of<AppState>(context, listen: false);
+    _i = _i + (_i == (board.length - 1) ? 0 : 1);
+    appProvider.setPosition(row: _i, col: _j);
+    dev.log("Pressed down");
+  }
+
+  _onLeftArrowTapped() {
+    var appProvider = Provider.of<AppState>(context, listen: false);
+    _j = _j - (_j == 0 ? 0 : 1);
+    appProvider.setPosition(row: _i, col: _j);
+    dev.log("Pressed left");
+  }
+
+  _onRightArrowTapped() {
+    var appProvider = Provider.of<AppState>(context, listen: false);
+    _j = _j + (_j == (board.length - 1) ? 0 : 1);
+    appProvider.setPosition(row: _i, col: _j);
+    dev.log("Pressed right");
+  }
+
+  List<List<GlobalKey<FlipCardState>>> flipCardKeys = [];
+  List<List<int>> board = [];
+
   // List<List<int>> board =
   //     List.generate(9, (index) => List.generate(9, (index) => 0));
-  List<List<GlobalKey<BoardTileState>>> frontTileKeys = List.generate(
-      9, (index) => List.generate(9, (_) => GlobalKey<BoardTileState>()));
-  List<List<GlobalKey<BoardTileState>>> backTileKeys = List.generate(
-      9, (index) => List.generate(9, (_) => GlobalKey<BoardTileState>()));
+  List<List<GlobalKey<BoardTileState>>> frontTileKeys = [];
+  List<List<GlobalKey<BoardTileState>>> backTileKeys = [];
+
+  Sudoku? sudoku;
 
   @override
   void initState() {
     super.initState();
-    _generate_board();
+    sudoku = Sudoku();
+    var appProvider = Provider.of<AppState>(context, listen: false);
+    appProvider.N = 9;
+    _generateBoard();
   }
 
-  _generate_board() async {
-    List<int?>? value;
-    try {
-      Map<String, dynamic> args = <String, dynamic>{};
-      args.putIfAbsent('N', () => 9);
-      value = await platform.invokeMethod<List<int>>("generate_grid", args);
-      int j = 0;
-      // 40% - easy, 60% - medium, 80% - hard
-      int show = (81 * 0.80).round();
-      var indx = [];
-      var indL = List.generate(81, (index) => index);
-      for (int i = 0; i < show; i++) {
-        var ind = indL[Random().nextInt(indL.length)];
-        indx.add(ind);
-        indL.remove(ind);
-      }
-      dev.log("Random Indices :: $show :: $indx");
-      for (int i = 0; i < 81; i++) {
-        if (i != 0 && i % 9 == 0) {
-          j++;
-        }
-        if (!indx.contains(i)) {
-          _board[j][i % 9] = value!.elementAt(i) ?? 0;
-        }
+  _generateBoard() async {
+    indices = [];
+    var appProvider = Provider.of<AppState>(context, listen: false);
+    int N = appProvider.N;
+    flipCardKeys
+      ..clear()
+      ..addAll(List.generate(
+          N, (index) => List.generate(N, (_) => GlobalKey<FlipCardState>())));
+    frontTileKeys = List.generate(
+        N, (index) => List.generate(N, (_) => GlobalKey<BoardTileState>()));
+    backTileKeys = List.generate(
+        N, (index) => List.generate(N, (_) => GlobalKey<BoardTileState>()));
+    board = await sudoku?.generateGrid(N) ??
+        List.generate(N, (index) => List.generate(N, (index) => 0));
 
-        // if (Random().nextBool()) {
-        //   board[j][i % 9] = _board[i % 9][j];
-        // }
+    appProvider.from(board);
+    setStartingPositions();
+    for (var l1 in board) {
+      for (var l2 in l1) {
+        if (l2 == 0) {
+          zeros += 1;
+        }
       }
-      args.putIfAbsent('grid', () => _board);
-      bool isValid =
-          await platform.invokeMethod<bool>("validate_grid", args) ?? false;
-      dev.log("Is Valid Grid :: $isValid");
-
-      Map<dynamic, dynamic> hint = await platform
-              .invokeMethod<Map<dynamic, dynamic>>("get_hint", args) ??
-          {};
-      dev.log("Hint :: $hint");
-    } catch (e) {
-      dev.log("$e");
     }
-    dev.log("Value :: $value");
-    dev.log("\nBoard :: $_board");
-    // dev.log("\nDisplayed Board :: $board");
+    dev.log("Total Zeros :: $zeros");
     setState(() {});
   }
 
+  setStartingPositions() {
+    var appProvider = Provider.of<AppState>(context, listen: false);
+    _i = -1;
+    _j = -1;
+    for (int i = 0; i < appProvider.N; i++) {
+      for (int j = 0; j < appProvider.N; j++) {
+        if (appProvider.actualBoard[i][j] == 0) {
+          _i = i;
+          _j = j;
+          appProvider.setPosition(row: i, col: j);
+          break;
+        }
+      }
+      if (_i != -1 && _j != -1) {
+        break;
+      }
+    }
+  }
+
   _restart() {
-    _flipCardKeys
-      ..clear()
-      ..addAll(List.generate(
-          9, (index) => List.generate(9, (_) => GlobalKey<FlipCardState>())));
-    _generate_board();
+    _i = 0;
+    _j = 0;
+    var appProvider = Provider.of<AppState>(context, listen: false);
+    board = appProvider.copy();
+    setStartingPositions();
+    for (List<int> ind in indices) {
+      flipCardKeys[ind[0]][ind[1]].currentState?.toggleCard();
+    }
+    indices = [];
+    setState(() {});
   }
 
   _tileTapped(int i, int j) {
@@ -190,8 +270,8 @@ class _HomeState extends State<Home> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Board(
-              board: _board,
-              flipCardKeys: _flipCardKeys,
+              board: board,
+              flipCardKeys: flipCardKeys,
               onTap: _tileTapped,
               frontTileKeys: frontTileKeys,
               backTileKeys: backTileKeys,

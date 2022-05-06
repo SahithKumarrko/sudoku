@@ -69,6 +69,7 @@ class _BoardState extends State<Board> {
                                 });
                               },
                               child: FlipCard(
+                                fill: Fill.fillBack,
                                 key: widget.flipCardKeys[i][j],
                                 flipOnTouch: false,
                                 direction: FlipDirection.VERTICAL,
@@ -81,6 +82,7 @@ class _BoardState extends State<Board> {
                                 back: BoardTile(
                                   letter: n,
                                   key: widget.backTileKeys[i][j],
+                                  backgroundColor: Colors.red,
                                   i: i,
                                   j: j,
                                 ),

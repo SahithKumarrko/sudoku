@@ -53,6 +53,23 @@ public class MainActivity extends FlutterActivity {
 
                     SudokuValidator sv = new SudokuValidator(N);
                     boolean valid = sv.isValidConfig(grid);
+                    sv.print(grid);
+                    System.out.println("Valid :: "+valid);
+                    
+                    result.success(valid);
+                }else if(methodCall.method.equals("validate")){
+                    ArrayList<ArrayList<Integer>> arr_grid = methodCall.argument("grid");
+                    int row = methodCall.argument("row");
+                    int col = methodCall.argument("col");
+                    int[][] grid = new int[N][N];
+                    for(int i=0;i<arr_grid.size();i++){
+                        grid[i] = arr_grid.get(i).stream().mapToInt(v->v).toArray();
+                    }
+                    System.out.println("Received grid");
+
+                    SudokuValidator sv = new SudokuValidator(N);
+                    boolean valid = sv.isValid(grid,row,col);
+                    sv.print(grid);
                     System.out.println("Valid :: "+valid);
                     
                     result.success(valid);
