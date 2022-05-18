@@ -6,6 +6,8 @@ class AppState extends ChangeNotifier {
   int i = 0;
   int j = 0;
   int N = 9;
+  static AnimationController? controller;
+  static Animation<double>? animation;
   List<List<int>> actualBoard = [];
   setPosition({required int row, required int col}) {
     i = row;

@@ -41,7 +41,8 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+class _MyAppState extends State<MyApp>
+    with WidgetsBindingObserver, TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
@@ -53,12 +54,29 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       themeProvider.toggleTheme(brightness == Brightness.dark);
     };
 
+    // AppState.controller = AnimationController(
+    //   duration: const Duration(seconds: 2),
+    //   vsync: this,
+    // );
+
+    // Animation<double> anim = CurvedAnimation(
+    //   parent: AppState.controller ??
+    //       AnimationController(
+    //         duration: const Duration(seconds: 1),
+    //         vsync: this,
+    //       ),
+    //   curve: Curves.easeIn,
+    // );
+
+    // AppState.animation = Tween<double>(begin: 1, end: 1.5).animate(anim);
+
     WidgetsBinding.instance!.addObserver(this);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance!.removeObserver(this);
+    // AppState.controller?.dispose();
     super.dispose();
   }
 
@@ -188,6 +206,7 @@ class _HomeState extends State<Home> {
     sudoku = Sudoku();
     var appProvider = Provider.of<AppState>(context, listen: false);
     appProvider.N = 9;
+
     _generateBoard();
   }
 

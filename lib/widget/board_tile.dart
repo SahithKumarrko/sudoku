@@ -22,15 +22,28 @@ class BoardTileState extends State<BoardTile> {
   @override
   Widget build(BuildContext context) {
     var appProvider = Provider.of<AppState>(context, listen: true);
+    bool condition = (appProvider.i == widget.i &&
+        appProvider.j == widget.j &&
+        appProvider.actualBoard[widget.i][widget.j] == 0);
+    // return condition
+    //     ? ScaleTransition(scale: AppState.animation!, child: tile(condition))
+    //     : tile(condition);
+    return AnimatedScale(
+      scale: condition ? 1.5 : 1.0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.bounceOut,
+      child: tile(condition),
+    );
+  }
+
+  Container tile(bool condition) {
     return Container(
       margin: const EdgeInsets.all(4),
       height: 24,
       width: 24,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        border: (appProvider.i == widget.i &&
-                appProvider.j == widget.j &&
-                appProvider.actualBoard[widget.i][widget.j] == 0)
+        border: condition
             ? Border.all(color: Colors.red)
             : Border.all(color: Colors.black),
         borderRadius: BorderRadius.circular(4),

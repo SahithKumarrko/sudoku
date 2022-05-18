@@ -67,6 +67,7 @@ class _BoardState extends State<Board> {
                                     ?.setState(() {
                                   print("Updating back state");
                                 });
+                                // AppState.controller?.forward(from: 0);
                               },
                               child: FlipCard(
                                 fill: Fill.fillBack,
